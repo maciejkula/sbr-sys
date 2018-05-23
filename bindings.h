@@ -3,6 +3,22 @@
 #include <stdbool.h>
 
 /*
+ * Loss type.
+ */
+typedef enum {
+  BPR,
+  Hinge,
+} Loss;
+
+/*
+ * Optimizer type.
+ */
+typedef enum {
+  Adagrad,
+  Adam,
+} Optimizer;
+
+/*
  * Result type for $type.
  *
  * One of `value`, `error` is always set; it's null otherwise.
@@ -75,11 +91,11 @@ typedef struct {
   /*
    * Loss: one of 'hinge', 'bpr'.
    */
-  const char *loss;
+  Loss loss;
   /*
    * Optimizer: one of 'adagrad', 'adam'.
    */
-  const char *optimizer;
+  Optimizer optimizer;
   /*
    * Number of threads to use when fitting.
    */
@@ -148,6 +164,6 @@ void interactions_free(InteractionsPointer *model);
 InteractionsResult interactions_new(size_t num_users,
                                     size_t num_items,
                                     size_t len,
-                                    const int *users,
-                                    const int *items,
-                                    const int *timestamps);
+                                    const int32_t *users,
+                                    const int32_t *items,
+                                    const int32_t *timestamps);

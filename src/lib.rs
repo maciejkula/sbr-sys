@@ -8,7 +8,23 @@ extern crate sbr;
 mod errors;
 
 use std::ffi;
-use std::os::raw::{c_char, c_int, c_uchar};
+use std::os::raw::{c_char, c_uchar};
+
+/// Loss type.
+#[repr(C)]
+#[derive(Clone, Debug)]
+pub enum Loss {
+    BPR,
+    Hinge,
+}
+
+/// Optimizer type.
+#[repr(C)]
+#[derive(Clone, Debug)]
+pub enum Optimizer {
+    Adagrad,
+    Adam,
+}
 
 /// FFI-compatible object for building hyperparameters
 /// for `sbr::models::lstm::ImplictLSTMModel`.
@@ -27,9 +43,9 @@ pub struct LSTMHyperparameters {
     /// L2 penalty.
     l2_penalty: f32,
     /// Loss: one of 'hinge', 'bpr'.
-    loss: *const c_char,
+    loss: Loss,
     /// Optimizer: one of 'adagrad', 'adam'.
-    optimizer: *const c_char,
+    optimizer: Optimizer,
     /// Number of threads to use when fitting.
     num_threads: u64,
     /// Number of epochs to run.
@@ -41,22 +57,14 @@ pub struct LSTMHyperparameters {
 impl LSTMHyperparameters {
     /// Convert to the actual hyperparameters object.
     unsafe fn convert(&self) -> Result<sbr::models::lstm::Hyperparameters, const_cstr::ConstCStr> {
-        let optimizer = match ffi::CStr::from_ptr(self.optimizer)
-            .to_str()
-            .map_err(|_| errors::messages::OPTIMIZER_BAD_PARSE)?
-        {
-            "adam" => Ok(sbr::models::lstm::Optimizer::Adam),
-            "adagrad" => Ok(sbr::models::lstm::Optimizer::Adagrad),
-            _ => Err(errors::messages::OPTIMIZER_NOT_RECOGNIZED),
+        let optimizer = match self.optimizer {
+            Optimizer::Adam => Ok(sbr::models::lstm::Optimizer::Adam),
+            Optimizer::Adagrad => Ok(sbr::models::lstm::Optimizer::Adagrad),
         }?;
 
-        let loss = match ffi::CStr::from_ptr(self.loss)
-            .to_str()
-            .map_err(|_| errors::messages::LOSS_BAD_PARSE)?
-        {
-            "bpr" => Ok(sbr::models::lstm::Loss::BPR),
-            "hinge" => Ok(sbr::models::lstm::Loss::Hinge),
-            _ => Err(errors::messages::LOSS_NOT_RECOGNIZED),
+        let loss = match self.loss {
+            Loss::BPR => Ok(sbr::models::lstm::Loss::BPR),
+            Loss::Hinge => Ok(sbr::models::lstm::Loss::Hinge),
         }?;
 
         Ok(sbr::models::lstm::Hyperparameters::new(
@@ -103,9 +111,9 @@ pub extern "C" fn interactions_new(
     num_users: libc::size_t,
     num_items: libc::size_t,
     len: libc::size_t,
-    users: *const c_int,
-    items: *const c_int,
-    timestamps: *const c_int,
+    users: *const libc::int32_t,
+    items: *const libc::int32_t,
+    timestamps: *const libc::int32_t,
 ) -> errors::InteractionsResult {
     let (users, items, timestamps) = unsafe {
         (
@@ -136,7 +144,7 @@ pub extern "C" fn implicit_lstm_fit(
 ) -> errors::FloatResult {
     let result = unsafe {
         (*(model as *mut sbr::models::lstm::ImplicitLSTMModel))
-            .fit(&(*(data as sbr::data::Interactions)).to_compressed())
+            .fit(&(*(data as *const sbr::data::Interactions)).to_compressed())
     };
 
     result.map_err(|_| errors::messages::FITTING_FAILED).into()
@@ -151,7 +159,7 @@ pub extern "C" fn implicit_lstm_mrr_score(
     let result = unsafe {
         sbr::evaluation::mrr_score(
             &(*(model as *const sbr::models::lstm::ImplicitLSTMModel)),
-            &(*(data as sbr::data::Interactions)).to_compressed(),
+            &(*(data as *const sbr::data::Interactions)).to_compressed(),
         )
     };
 
