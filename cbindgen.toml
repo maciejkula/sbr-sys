@@ -1,2 +1,4 @@
+language = "C"
+
 [parse]
 expand = ["sbr-sys"]

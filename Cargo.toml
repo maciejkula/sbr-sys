@@ -7,8 +7,8 @@ authors = ["maciejkula <maciej.kula@gmail.com>"]
 crate-type = ["dylib"]
 
 [features]
-openblas = ["ndarray/blas", "blas-src/openblas", "openblas-src"]
-mkl = ["ndarray/blas", "blas-src/intel-mkl"]
+default = ["ndarray/blas", "blas-src", "blas-src/openblas", "openblas-src"]
+# mkl = ["ndarray/blas", "blas-src", "blas-src/intel-mkl"]
 
 [dependencies]
 sbr = { path = "../sbr" }
@@ -16,5 +16,5 @@ const-cstr = "0.3.0"
 libc = "0.2.41"
 itertools = "0.7.8"
 ndarray = { version = "0.11.0", features = ["serde-1"] }
-blas-src = { version = "0.1.2" }
+blas-src = { version = "0.1.2", optional = true }
 openblas-src = { version = "0.5.6", default-features = false, features = ["static"], optional = true }

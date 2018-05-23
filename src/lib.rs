@@ -95,7 +95,7 @@ macro_rules! free {
     };
 }
 
-free!(implicit_lstm_free, sbr::models::lstm::ImplicitLSTMModel);
+free!(implicit_lstm_free, errors::ImplicitLSTMModelPointer);
 
 /// Create an interaction dataset from input arrays.
 #[no_mangle]
@@ -126,15 +126,18 @@ pub extern "C" fn interactions_new(
     Ok(interactions).into()
 }
 
-free!(interactions_free, sbr::data::Interactions);
+free!(interactions_free, errors::InteractionsPointer);
 
 /// Fit an ImplicitLSTMModel.
 #[no_mangle]
 pub extern "C" fn implicit_lstm_fit(
-    model: *mut sbr::models::lstm::ImplicitLSTMModel,
-    data: *const sbr::data::Interactions,
+    model: *mut errors::ImplicitLSTMModelPointer,
+    data: *const errors::InteractionsPointer,
 ) -> errors::FloatResult {
-    let result = unsafe { (*model).fit(&(*data).to_compressed()) };
+    let result = unsafe {
+        (*(model as *mut sbr::models::lstm::ImplicitLSTMModel))
+            .fit(&(*(data as sbr::data::Interactions)).to_compressed())
+    };
 
     result.map_err(|_| errors::messages::FITTING_FAILED).into()
 }
@@ -142,10 +145,15 @@ pub extern "C" fn implicit_lstm_fit(
 /// Compute MRR score for a fitted model.
 #[no_mangle]
 pub extern "C" fn implicit_lstm_mrr_score(
-    model: *mut sbr::models::lstm::ImplicitLSTMModel,
-    data: *const sbr::data::Interactions,
+    model: *const errors::ImplicitLSTMModelPointer,
+    data: *const errors::InteractionsPointer,
 ) -> errors::FloatResult {
-    let result = unsafe { sbr::evaluation::mrr_score(&(*model), &(*data).to_compressed()) };
+    let result = unsafe {
+        sbr::evaluation::mrr_score(
+            &(*(model as *const sbr::models::lstm::ImplicitLSTMModel)),
+            &(*(data as sbr::data::Interactions)).to_compressed(),
+        )
+    };
 
     result
         .map_err(|e| match e {
