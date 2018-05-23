@@ -6,10 +6,15 @@ authors = ["maciejkula <maciej.kula@gmail.com>"]
 [lib]
 crate-type = ["dylib"]
 
+[features]
+openblas = ["ndarray/blas", "blas-src/openblas", "openblas-src"]
+mkl = ["ndarray/blas", "blas-src/intel-mkl"]
+
 [dependencies]
 sbr = { path = "../sbr" }
 const-cstr = "0.3.0"
 libc = "0.2.41"
 itertools = "0.7.8"
-ndarray = { version = "0.11.0", features = ["blas", "serde-1"] }
-blas-src = { version = "0.1.2", default-features = false, features = ["intel-mkl"] }
+ndarray = { version = "0.11.0", features = ["serde-1"] }
+blas-src = { version = "0.1.2" }
+openblas-src = { version = "0.5.6", default-features = false, features = ["static"], optional = true }
