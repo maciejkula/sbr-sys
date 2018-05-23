@@ -5,9 +5,6 @@ rust:
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y gfortran
-  - cargo install cbindgen
 
 script:
   - cargo test
-  - make cbindgen
-  - git diff-index --quiet --cached HEAD --
