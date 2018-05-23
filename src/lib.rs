@@ -171,11 +171,3 @@ pub extern "C" fn implicit_lstm_mrr_score(
 }
 
 free!(float_free, f32);
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
