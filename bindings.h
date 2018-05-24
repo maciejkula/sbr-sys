@@ -154,6 +154,19 @@ FloatResult implicit_lstm_mrr_score(const ImplicitLSTMModelPointer *model,
 ImplicitLSTMModelResult implicit_lstm_new(LSTMHyperparameters hyperparameters);
 
 /*
+ * Get predictions out of an ImplicitLSTMModel.
+ *
+ * The returned string is non-null if an error occurred.
+ * It must not be freed.
+ */
+const char *implicit_lstm_predict(ImplicitLSTMModelPointer *model,
+                                  const int32_t *user_history,
+                                  size_t history_len,
+                                  const int32_t *item_ids,
+                                  float *out,
+                                  size_t predictions_len);
+
+/*
  * Free the data behind the input pointer.
  */
 void interactions_free(InteractionsPointer *model);

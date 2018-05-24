@@ -10,6 +10,8 @@ mod errors;
 use std::ffi;
 use std::os::raw::{c_char, c_uchar};
 
+use sbr::OnlineRankingModel;
+
 /// Loss type.
 #[repr(C)]
 #[derive(Clone, Debug)]
@@ -148,6 +150,53 @@ pub extern "C" fn implicit_lstm_fit(
     };
 
     result.map_err(|_| errors::messages::FITTING_FAILED).into()
+}
+
+/// Get predictions out of an ImplicitLSTMModel.
+///
+/// The returned string is non-null if an error occurred.
+/// It must not be freed.
+#[no_mangle]
+pub extern "C" fn implicit_lstm_predict(
+    model: *mut errors::ImplicitLSTMModelPointer,
+    user_history: *const libc::int32_t,
+    history_len: libc::size_t,
+    item_ids: *const libc::int32_t,
+    out: *mut f32,
+    predictions_len: libc::size_t,
+) -> *const c_char {
+    let (model, history, item_ids, out): (
+        &sbr::models::lstm::ImplicitLSTMModel,
+        &[libc::int32_t],
+        &[libc::int32_t],
+        &mut [f32],
+    ) = unsafe {
+        (
+            &(*(model as *mut sbr::models::lstm::ImplicitLSTMModel)),
+            std::slice::from_raw_parts(user_history, history_len as usize),
+            std::slice::from_raw_parts(item_ids, predictions_len as usize),
+            std::slice::from_raw_parts_mut(out, predictions_len as usize),
+        )
+    };
+
+    let history: Vec<usize> = history.iter().map(|&x| x as usize).collect();
+    let item_ids: Vec<usize> = item_ids.iter().map(|&x| x as usize).collect();
+
+    let user_repr = if let Ok(repr) = model.user_representation(&item_ids) {
+        repr
+    } else {
+        return errors::messages::BAD_REPRESENTATION.as_ptr();
+    };
+
+    if let Ok(predictions) = model.predict(&user_repr, &item_ids) {
+        for (&prediction, out_val) in predictions.iter().zip(out.iter_mut()) {
+            *out_val = prediction;
+        }
+
+        ::std::ptr::null::<c_char>()
+    } else {
+        errors::messages::BAD_PREDICTION.as_ptr()
+    }
 }
 
 /// Compute MRR score for a fitted model.

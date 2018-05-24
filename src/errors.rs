@@ -11,6 +11,7 @@ pub mod messages {
         pub LOSS_NOT_RECOGNIZED = "Loss not recognized";
         pub FITTING_FAILED = "Failure fitting model";
         pub BAD_PREDICTION = "Invalid prediction value: NaN or +/- inifinity";
+        pub BAD_REPRESENTATION = "Unable to compute user representation.";
     }
 }
 
