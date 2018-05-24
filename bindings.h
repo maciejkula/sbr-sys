@@ -70,16 +70,16 @@ typedef struct {
   /*
    * Number of items in the dataset.
    */
-  uint64_t num_items;
+  size_t num_items;
   /*
    * Maximum sequence lenght to consider when
    * computing a user representation.
    */
-  uint64_t max_sequence_length;
+  size_t max_sequence_length;
   /*
    * Internal embedding dimensionality.
    */
-  uint64_t item_embedding_dim;
+  size_t item_embedding_dim;
   /*
    * Initial learning rate.
    */
@@ -99,11 +99,11 @@ typedef struct {
   /*
    * Number of threads to use when fitting.
    */
-  uint64_t num_threads;
+  size_t num_threads;
   /*
    * Number of epochs to run.
    */
-  uint64_t num_epochs;
+  size_t num_epochs;
   /*
    * Random seed to use.
    */
@@ -160,9 +160,9 @@ ImplicitLSTMModelResult implicit_lstm_new(LSTMHyperparameters hyperparameters);
  * It must not be freed.
  */
 const char *implicit_lstm_predict(ImplicitLSTMModelPointer *model,
-                                  const int32_t *user_history,
+                                  const size_t *user_history,
                                   size_t history_len,
-                                  const int32_t *item_ids,
+                                  const size_t *item_ids,
                                   float *out,
                                   size_t predictions_len);
 
@@ -177,6 +177,6 @@ void interactions_free(InteractionsPointer *model);
 InteractionsResult interactions_new(size_t num_users,
                                     size_t num_items,
                                     size_t len,
-                                    const int32_t *users,
-                                    const int32_t *items,
-                                    const int32_t *timestamps);
+                                    const size_t *users,
+                                    const size_t *items,
+                                    const size_t *timestamps);

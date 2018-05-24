@@ -34,12 +34,12 @@ pub enum Optimizer {
 #[derive(Clone, Debug)]
 pub struct LSTMHyperparameters {
     /// Number of items in the dataset.
-    num_items: u64,
+    num_items: libc::size_t,
     /// Maximum sequence lenght to consider when
     /// computing a user representation.
-    max_sequence_length: u64,
+    max_sequence_length: libc::size_t,
     /// Internal embedding dimensionality.
-    item_embedding_dim: u64,
+    item_embedding_dim: libc::size_t,
     /// Initial learning rate.
     learning_rate: f32,
     /// L2 penalty.
@@ -49,9 +49,9 @@ pub struct LSTMHyperparameters {
     /// Optimizer: one of 'adagrad', 'adam'.
     optimizer: Optimizer,
     /// Number of threads to use when fitting.
-    num_threads: u64,
+    num_threads: libc::size_t,
     /// Number of epochs to run.
-    num_epochs: u64,
+    num_epochs: libc::size_t,
     /// Random seed to use.
     random_seed: [c_uchar; 16],
 }
@@ -69,17 +69,17 @@ impl LSTMHyperparameters {
             Loss::Hinge => Ok(sbr::models::lstm::Loss::Hinge),
         }?;
 
-        Ok(sbr::models::lstm::Hyperparameters::new(
-            self.num_items as usize,
-            self.max_sequence_length as usize,
-        ).learning_rate(self.learning_rate)
-            .embedding_dim(self.item_embedding_dim as usize)
-            .l2_penalty(self.l2_penalty)
-            .num_epochs(self.num_epochs as usize)
-            .num_threads(self.num_threads as usize)
-            .optimizer(optimizer)
-            .loss(loss)
-            .from_seed(self.random_seed))
+        Ok(
+            sbr::models::lstm::Hyperparameters::new(self.num_items, self.max_sequence_length)
+                .learning_rate(self.learning_rate)
+                .embedding_dim(self.item_embedding_dim)
+                .l2_penalty(self.l2_penalty)
+                .num_epochs(self.num_epochs)
+                .num_threads(self.num_threads)
+                .optimizer(optimizer)
+                .loss(loss)
+                .from_seed(self.random_seed),
+        )
     }
 }
 
@@ -113,9 +113,9 @@ pub extern "C" fn interactions_new(
     num_users: libc::size_t,
     num_items: libc::size_t,
     len: libc::size_t,
-    users: *const libc::int32_t,
-    items: *const libc::int32_t,
-    timestamps: *const libc::int32_t,
+    users: *const libc::size_t,
+    items: *const libc::size_t,
+    timestamps: *const libc::size_t,
 ) -> errors::InteractionsResult {
     let (users, items, timestamps) = unsafe {
         (
@@ -128,9 +128,7 @@ pub extern "C" fn interactions_new(
     let mut interactions = sbr::data::Interactions::new(num_users, num_items);
 
     izip!(users.iter(), items.iter(), timestamps.iter())
-        .map(|(&uid, &iid, &time)| {
-            sbr::data::Interaction::new(uid as usize, iid as usize, time as usize)
-        })
+        .map(|(&uid, &iid, &time)| sbr::data::Interaction::new(uid, iid, time))
         .for_each(|interaction| interactions.push(interaction));
 
     Ok(interactions).into()
@@ -159,16 +157,16 @@ pub extern "C" fn implicit_lstm_fit(
 #[no_mangle]
 pub extern "C" fn implicit_lstm_predict(
     model: *mut errors::ImplicitLSTMModelPointer,
-    user_history: *const libc::int32_t,
+    user_history: *const libc::size_t,
     history_len: libc::size_t,
-    item_ids: *const libc::int32_t,
+    item_ids: *const libc::size_t,
     out: *mut f32,
     predictions_len: libc::size_t,
 ) -> *const c_char {
     let (model, history, item_ids, out): (
         &sbr::models::lstm::ImplicitLSTMModel,
-        &[libc::int32_t],
-        &[libc::int32_t],
+        &[libc::size_t],
+        &[libc::size_t],
         &mut [f32],
     ) = unsafe {
         (
@@ -178,9 +176,6 @@ pub extern "C" fn implicit_lstm_predict(
             std::slice::from_raw_parts_mut(out, predictions_len as usize),
         )
     };
-
-    let history: Vec<usize> = history.iter().map(|&x| x as usize).collect();
-    let item_ids: Vec<usize> = item_ids.iter().map(|&x| x as usize).collect();
 
     let user_repr = if let Ok(repr) = model.user_representation(&item_ids) {
         repr
