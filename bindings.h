@@ -19,6 +19,28 @@ typedef enum {
 } Optimizer;
 
 /*
+ * Opaque struct for the underlying object.
+ */
+typedef struct {
+
+} ImplicitLSTMModelPointer;
+
+/*
+ * Result type for $type.
+ *
+ * One of `value`, `error` is always set; it's null otherwise.
+ * The error string should never be freed; the value object
+ * should be freed with the appropriate `free` function.
+ */
+typedef struct {
+  ImplicitLSTMModelPointer *value;
+  /*
+   * Do not free attempt to free the error string.
+   */
+  const char *error;
+} ImplicitLSTMModelResult;
+
+/*
  * Result type for $type.
  *
  * One of `value`, `error` is always set; it's null otherwise.
@@ -38,29 +60,7 @@ typedef struct {
  */
 typedef struct {
 
-} ImplicitLSTMModelPointer;
-
-/*
- * Opaque struct for the underlying object.
- */
-typedef struct {
-
 } InteractionsPointer;
-
-/*
- * Result type for $type.
- *
- * One of `value`, `error` is always set; it's null otherwise.
- * The error string should never be freed; the value object
- * should be freed with the appropriate `free` function.
- */
-typedef struct {
-  ImplicitLSTMModelPointer *value;
-  /*
-   * Do not free attempt to free the error string.
-   */
-  const char *error;
-} ImplicitLSTMModelResult;
 
 /*
  * FFI-compatible object for building hyperparameters
@@ -131,6 +131,11 @@ typedef struct {
 void float_free(float *model);
 
 /*
+ * Deserialize the LSTM model from a byte array.
+ */
+ImplicitLSTMModelResult implicit_lstm_deserialize(unsigned char *data, size_t len);
+
+/*
  * Fit an ImplicitLSTMModel.
  */
 FloatResult implicit_lstm_fit(ImplicitLSTMModelPointer *model, const InteractionsPointer *data);
@@ -139,6 +144,11 @@ FloatResult implicit_lstm_fit(ImplicitLSTMModelPointer *model, const Interaction
  * Free the data behind the input pointer.
  */
 void implicit_lstm_free(ImplicitLSTMModelPointer *model);
+
+/*
+ * Get the size (in bytes) of the serialized model.
+ */
+size_t implicit_lstm_get_serialized_size(ImplicitLSTMModelPointer *model);
 
 /*
  * Compute MRR score for a fitted model.
@@ -165,6 +175,15 @@ const char *implicit_lstm_predict(ImplicitLSTMModelPointer *model,
                                   const size_t *item_ids,
                                   float *out,
                                   size_t predictions_len);
+
+/*
+ * Serialize the model to the provided pointer.
+ *
+ * Returns an error message if there was an error.
+ */
+const char *implicit_lstm_serialize(ImplicitLSTMModelPointer *model,
+                                    unsigned char *out,
+                                    size_t len);
 
 /*
  * Free the data behind the input pointer.

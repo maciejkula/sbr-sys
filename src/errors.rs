@@ -5,13 +5,12 @@ use std::os::raw::c_char;
 
 pub mod messages {
     const_cstr! {
-        pub OPTIMIZER_BAD_PARSE = "Unable to parse optimizer";
-        pub LOSS_BAD_PARSE = "Unable to parse loss";
-        pub OPTIMIZER_NOT_RECOGNIZED = "Optimizer not recognized";
-        pub LOSS_NOT_RECOGNIZED = "Loss not recognized";
         pub FITTING_FAILED = "Failure fitting model";
         pub BAD_PREDICTION = "Invalid prediction value: NaN or +/- inifinity";
         pub BAD_REPRESENTATION = "Unable to compute user representation.";
+        pub BAD_SERIALIZATION = "Unable to serialize model.";
+        pub SERIALIZATION_TOO_SMALL = "Not enough space allocated for serialization";
+        pub BAD_DESERIALIZATION = "Unable to deserialize model.";
     }
 }
 

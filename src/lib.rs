@@ -2,12 +2,12 @@
 extern crate const_cstr;
 #[macro_use]
 extern crate itertools;
+extern crate bincode;
 extern crate libc;
 extern crate sbr;
 
 mod errors;
 
-use std::ffi;
 use std::os::raw::{c_char, c_uchar};
 
 use sbr::OnlineRankingModel;
@@ -177,7 +177,7 @@ pub extern "C" fn implicit_lstm_predict(
         )
     };
 
-    let user_repr = if let Ok(repr) = model.user_representation(&item_ids) {
+    let user_repr = if let Ok(repr) = model.user_representation(&history) {
         repr
     } else {
         return errors::messages::BAD_REPRESENTATION.as_ptr();
@@ -192,6 +192,51 @@ pub extern "C" fn implicit_lstm_predict(
     } else {
         errors::messages::BAD_PREDICTION.as_ptr()
     }
+}
+
+/// Get the size (in bytes) of the serialized model.
+#[no_mangle]
+pub extern "C" fn implicit_lstm_get_serialized_size(
+    model: *mut errors::ImplicitLSTMModelPointer,
+) -> libc::size_t {
+    let model = unsafe { &(*(model as *mut sbr::models::lstm::ImplicitLSTMModel)) };
+    bincode::serialized_size(model).expect("Unable to get serialized size") as usize
+}
+
+/// Serialize the model to the provided pointer.
+///
+/// Returns an error message if there was an error.
+#[no_mangle]
+pub extern "C" fn implicit_lstm_serialize(
+    model: *mut errors::ImplicitLSTMModelPointer,
+    out: *mut c_uchar,
+    len: libc::size_t,
+) -> *const c_char {
+    let model = unsafe { &(*(model as *mut sbr::models::lstm::ImplicitLSTMModel)) };
+    let out = unsafe { std::slice::from_raw_parts_mut(out, len) };
+
+    if len < bincode::serialized_size(model).expect("Unable to get serialized size") as usize {
+        return errors::messages::SERIALIZATION_TOO_SMALL.as_ptr();
+    }
+
+    if let Ok(_) = bincode::serialize_into(out, model) {
+        ::std::ptr::null::<c_char>()
+    } else {
+        errors::messages::BAD_SERIALIZATION.as_ptr()
+    }
+}
+
+/// Deserialize the LSTM model from a byte array.
+#[no_mangle]
+pub extern "C" fn implicit_lstm_deserialize(
+    data: *mut c_uchar,
+    len: libc::size_t,
+) -> errors::ImplicitLSTMModelResult {
+    let data = unsafe { std::slice::from_raw_parts_mut(data, len) };
+
+    bincode::deserialize::<sbr::models::lstm::ImplicitLSTMModel>(data)
+        .map_err(|_| errors::messages::BAD_DESERIALIZATION)
+        .into()
 }
 
 /// Compute MRR score for a fitted model.
