@@ -4,11 +4,12 @@ version = "0.1.0"
 authors = ["maciejkula <maciej.kula@gmail.com>"]
 
 [lib]
-crate-type = ["dylib"]
+crate-type = ["cdylib"]
 
 [features]
-default = ["ndarray/blas", "blas-src", "blas-src/openblas", "openblas-src"]
-# mkl = ["ndarray/blas", "blas-src", "blas-src/intel-mkl"]
+openblas = ["ndarray/blas", "blas-src", "blas-src/openblas", "openblas-src"]
+mkl = ["ndarray/blas", "blas-src", "blas-src/intel-mkl"]
+accelerate = ["ndarray/blas", "blas-src", "blas-src/accelerate"]
 
 [dependencies]
 sbr = "0.1.1"
