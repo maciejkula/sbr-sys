@@ -15,7 +15,7 @@ pub mod messages {
 }
 
 pub trait Opaque<T> {
-    fn to_opaque(self) -> *mut T;
+    unsafe fn into_box(self) -> Box<T>;
 }
 
 macro_rules! ffi_result {
@@ -24,9 +24,11 @@ macro_rules! ffi_result {
         #[repr(C)]
         pub struct $opaque_name {}
 
-        impl Opaque<$opaque_name> for *mut $type {
-            fn to_opaque(self) -> *mut $opaque_name {
-                self as *mut $opaque_name
+        /// Calling `into_box` will create a box of the underlying
+        /// type from a pointer to its opaque wrapper.
+        impl Opaque<$type> for *mut $opaque_name {
+            unsafe fn into_box(self) -> Box<$type> {
+                Box::from_raw(self as *mut $type)
             }
         }
 
@@ -47,7 +49,7 @@ macro_rules! ffi_result {
             fn from(x: Result<$type, const_cstr::ConstCStr>) -> Self {
                 match x {
                     Ok(val) => Self {
-                        value: Box::into_raw(Box::new(val)).to_opaque(),
+                        value: Box::into_raw(Box::new(val)) as *mut $opaque_name,
                         error: ::std::ptr::null::<c_char>(),
                     },
                     Err(err) => Self {

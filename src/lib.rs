@@ -12,6 +12,8 @@ use std::os::raw::{c_char, c_uchar};
 
 use sbr::OnlineRankingModel;
 
+use errors::Opaque;
+
 /// Loss type.
 #[repr(C)]
 #[derive(Clone, Debug)]
@@ -97,9 +99,9 @@ macro_rules! free {
     ($name:ident, $type:ty) => {
         /// Free the data behind the input pointer.
         #[no_mangle]
-        pub extern "C" fn $name(model: *mut $type) {
+        pub extern "C" fn $name(x: *mut $type) {
             unsafe {
-                Box::from_raw(model);
+                x.into_box();
             }
         }
     };
@@ -258,5 +260,3 @@ pub extern "C" fn implicit_lstm_mrr_score(
         })
         .into()
 }
-
-free!(float_free, f32);

@@ -126,11 +126,6 @@ typedef struct {
 } InteractionsResult;
 
 /*
- * Free the data behind the input pointer.
- */
-void float_free(float *model);
-
-/*
  * Deserialize the LSTM model from a byte array.
  */
 ImplicitLSTMModelResult implicit_lstm_deserialize(unsigned char *data, size_t len);
@@ -143,7 +138,7 @@ FloatResult implicit_lstm_fit(ImplicitLSTMModelPointer *model, const Interaction
 /*
  * Free the data behind the input pointer.
  */
-void implicit_lstm_free(ImplicitLSTMModelPointer *model);
+void implicit_lstm_free(ImplicitLSTMModelPointer *x);
 
 /*
  * Get the size (in bytes) of the serialized model.
@@ -188,7 +183,7 @@ const char *implicit_lstm_serialize(ImplicitLSTMModelPointer *model,
 /*
  * Free the data behind the input pointer.
  */
-void interactions_free(InteractionsPointer *model);
+void interactions_free(InteractionsPointer *x);
 
 /*
  * Create an interaction dataset from input arrays.
