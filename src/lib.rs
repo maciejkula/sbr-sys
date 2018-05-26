@@ -1,3 +1,4 @@
+//! C bindings for [Sbr](https://github.com/maciejkula/sbr-rs).
 #[macro_use]
 extern crate const_cstr;
 #[macro_use]

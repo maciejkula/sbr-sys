@@ -2,6 +2,13 @@
 name = "sbr-sys"
 version = "0.1.0"
 authors = ["maciejkula <maciej.kula@gmail.com>"]
+description = "C bindings for sbr."
+repository = "https://github.com/maciejkula/sbr-sys"
+readme = "readme.md"
+license = "MIT"
+
+[badges]
+travis-ci = { repository = "maciejkula/sbr-sys", branch = "master" }
 
 [lib]
 crate-type = ["cdylib"]
