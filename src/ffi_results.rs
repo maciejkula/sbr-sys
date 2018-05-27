@@ -3,7 +3,8 @@ use sbr;
 
 use std::os::raw::c_char;
 
-pub mod messages {
+/// Errors messages as static C strings.
+pub mod errors {
     const_cstr! {
         pub FITTING_FAILED = "Failure fitting model";
         pub BAD_PREDICTION = "Invalid prediction value: NaN or +/- inifinity";
@@ -41,7 +42,7 @@ macro_rules! ffi_result {
         #[derive(Clone, Debug)]
         pub struct $name {
             value: *mut $opaque_name,
-            /// Do not free attempt to free the error string.
+            /// Do not attempt to free the error string.
             error: *const c_char,
         }
 
@@ -70,7 +71,7 @@ macro_rules! ffi_result {
         #[derive(Clone, Debug)]
         pub struct $name {
             value: *mut $type,
-            /// Do not free attempt to free the error string.
+            /// Do not attempt to free the error string.
             error: *const c_char,
         }
 
