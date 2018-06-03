@@ -29,5 +29,4 @@ blas-src = { version = "0.1.2", optional = true }
 openblas-src = { version = "0.5.6", default-features = false, features = ["static"], optional = true }
 
 [profile.release]
-rpath = true
 lto = true
