@@ -47,8 +47,9 @@ pub struct LSTMHyperparameters {
     learning_rate: f32,
     /// L2 penalty.
     l2_penalty: f32,
-    /// Coupled: should we use coupled forget and update gates.
-    coupled: bool,
+    /// Coupled: should we use coupled forget and update gates. 0 for false,
+    /// 1 for true.
+    coupled: libc::size_t,
     /// Loss: one of 'hinge', 'bpr'.
     loss: Loss,
     /// Optimizer: one of 'adagrad', 'adam'.
@@ -81,7 +82,7 @@ impl LSTMHyperparameters {
                 .l2_penalty(self.l2_penalty)
                 .num_epochs(self.num_epochs)
                 .num_threads(self.num_threads)
-                .lstm_variant(if self.coupled {
+                .lstm_variant(if self.coupled == 1 {
                     sbr::models::lstm::LSTMVariant::Coupled
                 } else {
                     sbr::models::lstm::LSTMVariant::Normal

@@ -89,9 +89,10 @@ typedef struct {
    */
   float l2_penalty;
   /*
-   * Coupled: should we use coupled forget and update gates.
+   * Coupled: should we use coupled forget and update gates. 0 for false,
+   * 1 for true.
    */
-  bool coupled;
+  size_t coupled;
   /*
    * Loss: one of 'hinge', 'bpr'.
    */
