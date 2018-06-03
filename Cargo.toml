@@ -1,6 +1,6 @@
 [package]
 name = "sbr-sys"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["maciejkula <maciej.kula@gmail.com>"]
 description = "C bindings for sbr."
 repository = "https://github.com/maciejkula/sbr-sys"
@@ -19,7 +19,7 @@ mkl = ["ndarray/blas", "blas-src", "blas-src/intel-mkl"]
 accelerate = ["ndarray/blas", "blas-src", "blas-src/accelerate"]
 
 [dependencies]
-sbr = "0.1.1"
+sbr = "0.2.0"
 const-cstr = "0.3.0"
 bincode = "1.0.0"
 libc = "0.2.41"

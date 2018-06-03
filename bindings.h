@@ -35,7 +35,7 @@ typedef struct {
 typedef struct {
   ImplicitLSTMModelPointer *value;
   /*
-   * Do not free attempt to free the error string.
+   * Do not attempt to free the error string.
    */
   const char *error;
 } ImplicitLSTMModelResult;
@@ -50,7 +50,7 @@ typedef struct {
 typedef struct {
   float *value;
   /*
-   * Do not free attempt to free the error string.
+   * Do not attempt to free the error string.
    */
   const char *error;
 } FloatResult;
@@ -89,6 +89,10 @@ typedef struct {
    */
   float l2_penalty;
   /*
+   * Coupled: should we use coupled forget and update gates.
+   */
+  bool coupled;
+  /*
    * Loss: one of 'hinge', 'bpr'.
    */
   Loss loss;
@@ -120,7 +124,7 @@ typedef struct {
 typedef struct {
   InteractionsPointer *value;
   /*
-   * Do not free attempt to free the error string.
+   * Do not attempt to free the error string.
    */
   const char *error;
 } InteractionsResult;
