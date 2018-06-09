@@ -1,7 +1,7 @@
+import glob
 import os
 import shutil
 import subprocess
-import pathlib
 
 
 def build(build_dir="build", features="", cpu_features="avx2"):
@@ -43,8 +43,8 @@ def build(build_dir="build", features="", cpu_features="avx2"):
     except FileExistsError:
         pass
 
-    for fname in pathlib.Path(".").glob("target/x86_64-unknown-linux-musl/release/libsbr*"):
-        shutil.copy(fname, os.path.join(build_dir, fname.name))
+    for fname in glob.glob("target/x86_64-unknown-linux-musl/release/libsbr*"):
+        shutil.copy(fname, os.path.join(build_dir, fname.split("/")[-1]))
 
 
 def compress_binaries(build_dir="build"):
