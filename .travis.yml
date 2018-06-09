@@ -2,24 +2,15 @@ language: rust
 rust:
   - stable
 
+services:
+  - docker
+
 matrix:
   include:
     - os: linux
       dist: trusty
       sudo: required
-      env:
-        - FEATURES="openblas"
     - os: osx
-      env:
-        - FEATURES="mkl"
-
-addons:
-  apt:
-    packages:
-      - gfortran
-
-before_install:
-  - eval "${MATRIX_EVAL}"
 
 script:
-  - cargo test --features=$FEATURES
+  - python .travis/build.py

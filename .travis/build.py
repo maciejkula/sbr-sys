@@ -47,8 +47,15 @@ def build(build_dir="build", features="", cpu_features="avx2"):
         shutil.copy(fname, os.path.join(build_dir, fname.name))
 
 
+def compress_binaries(build_dir="build"):
+
+    shutil.make_archive("libsbr", "zip", build_dir)
+
+
 if __name__ == "__main__":
 
     for cpu_features in ("sse", "avx", "avx2")[1:]:
         print("Building for {}...".format(cpu_features))
         build(features="openblas", cpu_features=cpu_features)
+
+    compress_binaries()
