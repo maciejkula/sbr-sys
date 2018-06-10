@@ -75,16 +75,15 @@ def build_linux(build_dir="build", features="", cpu_features="avx2"):
 
     container_dir = "/home/rust/src/target/x86_64-unknown-linux-musl/release/"
 
-    for fname in "libsbr_sys.a":
-        fname = os.path.join(container_dir, fname)
-        subprocess.check_call(
-            [
-                "docker",
-                "cp",
-                "{}:{}".format(container_name, fname),
-                os.path.join(build_dir, fname.split("/")[-1]),
-            ]
-        )
+    fname = os.path.join(container_dir, "libsbr_sys.a")
+    subprocess.check_call(
+        [
+            "docker",
+            "cp",
+            "{}:{}".format(container_name, fname),
+            os.path.join(build_dir, fname.split("/")[-1]),
+        ]
+    )
 
 
 def compress_binaries(archive_name, build_dir="build"):
