@@ -16,6 +16,7 @@ def build_osx(build_dir="build", features="", cpu_features="avx2"):
 
     # Make OpenBLAS support lots of threads.
     os.environ["OPENBLAS_NUM_THREADS"] = "128"
+    os.environ["NUM_THREADS"] = "128"
 
     cargo_cmd = ["cargo", "build", "--verbose", "--release", "--features={}".format(features)]
     subprocess.check_call(cargo_cmd)
@@ -27,7 +28,7 @@ def build_osx(build_dir="build", features="", cpu_features="avx2"):
     except FileExistsError:
         pass
 
-    for fname in ("libsbr_sys.a", "libsbr_sys.so"):
+    for fname in ("libsbr_sys.a", "libsbr_sys.dylib"):
         shutil.copy(os.path.join("target/release/", fname), build_dir)
 
 
@@ -44,6 +45,7 @@ def build_linux(build_dir="build", features="", cpu_features="avx2"):
 
         # Make OpenBLAS support lots of threads.
         envfile.write("OPENBLAS_NUM_THREADS=128\n")
+        envfile.write("NUM_THREADS=128\n")
 
     container_name = str(uuid.uuid4())
 
@@ -93,11 +95,12 @@ def compress_binaries(archive_name, build_dir="build"):
 
 if __name__ == "__main__":
 
-    for cpu_features in ("sse", "avx", "avx2")[:1]:
-        print("Building for {}...".format(cpu_features))
-        if platform.system() == "Linux":
+    if platform.system() == "Linux":
+        for cpu_features in ("sse", "avx", "avx2")[:1]:
+            print("Building for {}...".format(cpu_features))
             build_linux(features="openblas", cpu_features=cpu_features)
             compress_binaries("libsbr_linux")
-        else:
+    else:
+        for cpu_features in ("sse", "avx")[:1]:
             build_osx(features="openblas", cpu_features=cpu_features)
             compress_binaries("libsbr_darwin")
