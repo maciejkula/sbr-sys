@@ -17,7 +17,7 @@ matrix:
     osx_image: xcode8
     env:
     - OS="darwin"
-    - MATRIX_EVAL="brew install gcc"
+    - MATRIX_EVAL="brew update && brew install gcc"
 
 before_install:
     - eval "${MATRIX_EVAL}"
@@ -30,6 +30,7 @@ deploy:
   api_key:
     secure: bBnL5Z+8JRg22RKQPaUzRp67VMqoFYQfaTlOjk87aB8MPKkiz8CybObou3Vjmym784ddeF6uVxoNpJM7RLoN+Nr8Gm9MKTLFlNgxvxqB6ig8DA+EnS/22EWzHM3XewZf3JBbQ7Ib5oASWoFIJ1OeugzH15JaOzCANtPQIDE5URzVLyp2PD/MCk3qiPjk2yW7QQIOffVALildH9ZTxgo83RDeGxfSv9SteBamX6ZdRdMPHZlRw1ziIXqM6NJ7Zmj6h6xWNPKYih5vIcYrcWeyT6hl/r3G6vHsu+rt9wTiaSyw2RCKaTOicMu1EAXUDGTnb57LPL88ID9z346CYyFaw6LwcrB+BQyXkhp2bqbPSNLy8D1Tj5mkZjGQ2GOpcg75Yt8HHAcEAra11zFRgHJn1p+jxDyJv3dkr99b+xq/7aPNyepJh2drqL7G5nzXlwIQpCIMu37Gt/rKrPrTH8ybhrqXYkffUdnmKEDAjfMNtG/asNW0hhlgPZB6iE9zpnbku9suYHAnVaSUDNfNeEUnkFt/5BIvL2plx2yV3aeOKn0EkYyG3Pa4dCRlYL46xY5TVIfce25hkkjqumW3Pb6qxzQaI6Hdw7JVru4aVnhgB9Xqf0s0dKO1jESt9CWtlrgD8Fk7j/KXmLkxSvVp1izF6YQKgRJL2Nd6OSVpvv4dN5o=
   file: libsbr_linux.zip
+  skip_cleanup: true
   on:
     repo: maciejkula/sbr-sys
     branch: static_builds
