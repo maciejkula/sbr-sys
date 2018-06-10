@@ -10,7 +10,11 @@ matrix:
     - os: linux
       dist: trusty
       sudo: required
+      env:
+        - OS="linux"
     - os: osx
+      env:
+        - OS="darwin"
 
 script:
   - python .travis/build.py
