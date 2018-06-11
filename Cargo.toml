@@ -11,7 +11,7 @@ license = "MIT"
 travis-ci = { repository = "maciejkula/sbr-sys", branch = "master" }
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "staticlib"]
 
 [features]
 openblas = ["ndarray/blas", "blas-src", "blas-src/openblas", "openblas-src"]
@@ -19,7 +19,6 @@ mkl = ["ndarray/blas", "blas-src", "blas-src/intel-mkl"]
 accelerate = ["ndarray/blas", "blas-src", "blas-src/accelerate"]
 
 [dependencies]
-sbr = "0.2.0"
 const-cstr = "0.3.0"
 bincode = "1.0.0"
 libc = "0.2.41"
@@ -27,6 +26,10 @@ itertools = "0.7.8"
 ndarray = { version = "0.11.0", features = ["serde-1"] }
 blas-src = { version = "0.1.2", optional = true }
 openblas-src = { version = "0.5.6", default-features = false, features = ["static"], optional = true }
+
+[dependencies.sbr]
+version = "0.2.1"
+default-features = false
 
 [profile.release]
 # Doesn't work with cgo on Darwin
