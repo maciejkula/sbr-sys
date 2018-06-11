@@ -78,7 +78,8 @@ def build_linux(build_dir="build", features="", cpu_features="avx2"):
 
     try:
         os.makedirs(build_dir)
-    except FileExistsError:
+    # Can't use FileExistsError on Py27
+    except Exception:
         pass
 
     container_dir = "/target/release/"
@@ -110,5 +111,5 @@ if __name__ == "__main__":
             print("Building for {}...".format(cpu_features))
             build_linux(features="openblas", cpu_features=cpu_features)
     else:
-        for cpu_features in ("sse", "avx")[:1]:
+        for cpu_features in ("sse", "avx"):
             build_osx(features="openblas", cpu_features=cpu_features)
