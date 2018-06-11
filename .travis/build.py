@@ -24,7 +24,7 @@ def build_osx(build_dir="build", features="", cpu_features="avx2"):
 
     try:
         os.makedirs(build_dir)
-    except FileExistsError:
+    except Exception:
         pass
 
     for fname in ("libsbr_sys.a", "libsbr_sys.dylib"):

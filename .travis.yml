@@ -35,4 +35,5 @@ deploy:
   overwrite: true
   on:
     repo: maciejkula/sbr-sys
-    branch: static_builds
+    tags: true
+    branch: master
