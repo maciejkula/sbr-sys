@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import uuid
 import platform
+import zipfile
 
 
 def build_osx(build_dir="build", features="", cpu_features="avx2"):
@@ -21,15 +22,20 @@ def build_osx(build_dir="build", features="", cpu_features="avx2"):
     cargo_cmd = ["cargo", "build", "--verbose", "--release", "--features={}".format(features)]
     subprocess.check_call(cargo_cmd)
 
-    build_dir = os.path.join(build_dir, "darwin", cpu_features)
-
     try:
         os.makedirs(build_dir)
     except FileExistsError:
         pass
 
     for fname in ("libsbr_sys.a", "libsbr_sys.dylib"):
-        shutil.copy(os.path.join("target/release/", fname), build_dir)
+        dest_name = "darwin_{}_{}".format(cpu_features, fname)
+        dest_location = os.path.join(build_dir, dest_name)
+        shutil.copy(os.path.join("target/release/", fname), dest_location)
+
+        with zipfile.ZipFile(dest_location + ".zip", "w") as archive:
+            archive.write(dest_location, fname)
+
+        os.unlink(dest_location)
 
 
 def build_linux(build_dir="build", features="", cpu_features="avx2"):
@@ -49,15 +55,17 @@ def build_linux(build_dir="build", features="", cpu_features="avx2"):
 
     container_name = str(uuid.uuid4())
 
-    docker_build_cmd = ["docker", "build", "-t", "musl-builder", "-f", ".travis/Dockerfile", "."]
+    docker_build_cmd = [
+        "docker", "build", "-t", "manylinux-builder", "-f", ".travis/Dockerfile", "."
+    ]
     subprocess.check_call(docker_build_cmd)
 
-    musl_cmd = (
+    manylinux_cmd = (
         "docker run "
         "--name {container_name} "
         "--env-file env.list "
         "-it "
-        "musl-builder".format(
+        "manylinux-builder".format(
             pwd=os.getcwd(), cpu_features=cpu_features, container_name=container_name
         )
     ).split(
@@ -66,26 +74,28 @@ def build_linux(build_dir="build", features="", cpu_features="avx2"):
 
     cargo_cmd = ["cargo", "build", "--verbose", "--release", "--features={}".format(features)]
 
-    subprocess.check_call(musl_cmd + cargo_cmd)
-
-    build_dir = os.path.join(build_dir, "linux", cpu_features)
+    subprocess.check_call(manylinux_cmd + cargo_cmd)
 
     try:
         os.makedirs(build_dir)
     except FileExistsError:
         pass
 
-    container_dir = "/home/rust/src/target/x86_64-unknown-linux-musl/release/"
+    container_dir = "/target/release/"
 
-    fname = os.path.join(container_dir, "libsbr_sys.a")
-    subprocess.check_call(
-        [
-            "docker",
-            "cp",
-            "{}:{}".format(container_name, fname),
-            os.path.join(build_dir, fname.split("/")[-1]),
-        ]
-    )
+    for fname in ("libsbr_sys.a", "libsbr_sys.so"):
+        local_filename = "linux_{}_{}".format(cpu_features, fname)
+        local_dest = os.path.join(build_dir, local_filename)
+
+        container_fname = os.path.join(container_dir, fname)
+        subprocess.check_call(
+            ["docker", "cp", "{}:{}".format(container_name, container_fname), local_dest]
+        )
+
+        with zipfile.ZipFile(local_dest + ".zip", "w") as archive:
+            archive.write(local_dest, fname)
+
+        os.unlink(local_dest)
 
 
 def compress_binaries(archive_name, build_dir="build"):
@@ -96,11 +106,9 @@ def compress_binaries(archive_name, build_dir="build"):
 if __name__ == "__main__":
 
     if platform.system() == "Linux":
-        for cpu_features in ("sse", "avx", "avx2")[:1]:
+        for cpu_features in ("sse", "avx", "avx2"):
             print("Building for {}...".format(cpu_features))
             build_linux(features="openblas", cpu_features=cpu_features)
-            compress_binaries("libsbr_linux")
     else:
         for cpu_features in ("sse", "avx")[:1]:
             build_osx(features="openblas", cpu_features=cpu_features)
-            compress_binaries("libsbr_darwin")
