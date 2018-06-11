@@ -1,3 +1,4 @@
+#![deny(missing_docs)]
 //! C bindings for [Sbr](https://github.com/maciejkula/sbr-rs).
 #[macro_use]
 extern crate const_cstr;
@@ -19,15 +20,22 @@ use ffi_results::Opaque;
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub enum Loss {
+    /// Bayesian Personalised Ranking.
     BPR,
+    /// Pairwise hinge loss.
     Hinge,
+    /// Weighted Approximate Pairwise loss. This is likely
+    /// to have the best accuracy at the expense of some speed.
+    WARP,
 }
 
 /// Optimizer type.
 #[repr(C)]
 #[derive(Clone, Debug)]
 pub enum Optimizer {
+    /// Adagrad.
     Adagrad,
+    /// Adam.
     Adam,
 }
 
@@ -50,7 +58,7 @@ pub struct LSTMHyperparameters {
     /// Coupled: should we use coupled forget and update gates. 0 for false,
     /// 1 for true.
     coupled: libc::size_t,
-    /// Loss: one of 'hinge', 'bpr'.
+    /// Loss: one of 'hinge', 'bpr', 'warp'.
     loss: Loss,
     /// Optimizer: one of 'adagrad', 'adam'.
     optimizer: Optimizer,
@@ -73,6 +81,7 @@ impl LSTMHyperparameters {
         let loss = match self.loss {
             Loss::BPR => Ok(sbr::models::lstm::Loss::BPR),
             Loss::Hinge => Ok(sbr::models::lstm::Loss::Hinge),
+            Loss::WARP => Ok(sbr::models::lstm::Loss::WARP),
         }?;
 
         Ok(

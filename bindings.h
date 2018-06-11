@@ -6,15 +6,32 @@
  * Loss type.
  */
 typedef enum {
+  /*
+   * Bayesian Personalised Ranking.
+   */
   BPR,
+  /*
+   * Pairwise hinge loss.
+   */
   Hinge,
+  /*
+   * Weighted Approximate Pairwise loss. This is likely
+   * to have the best accuracy at the expense of some speed.
+   */
+  WARP,
 } Loss;
 
 /*
  * Optimizer type.
  */
 typedef enum {
+  /*
+   * Adagrad.
+   */
   Adagrad,
+  /*
+   * Adam.
+   */
   Adam,
 } Optimizer;
 
@@ -94,7 +111,7 @@ typedef struct {
    */
   size_t coupled;
   /*
-   * Loss: one of 'hinge', 'bpr'.
+   * Loss: one of 'hinge', 'bpr', 'warp'.
    */
   Loss loss;
   /*
