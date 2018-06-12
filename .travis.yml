@@ -23,7 +23,8 @@ before_install:
     - .travis/fortran.sh
 
 script:
-- python .travis/build.py
+- travis_wait 60 python .travis/build.py sse
+- travis_wait 60 python .travis/build.py avx
 
 deploy:
   provider: releases

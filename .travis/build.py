@@ -1,3 +1,4 @@
+import argparse
 import os
 import shutil
 import subprocess
@@ -18,6 +19,11 @@ def build_osx(build_dir="build", features="", cpu_features="avx2"):
     # Make OpenBLAS support lots of threads.
     os.environ["OPENBLAS_NUM_THREADS"] = "128"
     os.environ["NUM_THREADS"] = "128"
+
+    # Make OpenBLAS detect architectures
+    os.environ["DYNAMIC_ARCH"] = "1"
+    os.environ["BINARY"] = "64"
+    os.environ["USE_OPENMP"] = "0"
 
     cargo_cmd = ["cargo", "build", "--verbose", "--release", "--features={}".format(features)]
     subprocess.check_call(cargo_cmd)
@@ -49,9 +55,14 @@ def build_linux(build_dir="build", features="", cpu_features="avx2"):
         envfile.write("CFLAGS=-m{}\n".format(cpu_features))
         envfile.write("CXXFLAGS=-m{}\n".format(cpu_features))
 
-        # Make OpenBLAS support lots of threads.
+        # Make OpenBLAS support lots of threads and other flags.
         envfile.write("OPENBLAS_NUM_THREADS=128\n")
         envfile.write("NUM_THREADS=128\n")
+
+        # Make OpenBLAS detect architectures
+        envfile.write("DYNAMIC_ARCH=1\n")
+        envfile.write("BINARY=64\n")
+        envfile.write("USE_OPENMP=0\n")
 
     container_name = str(uuid.uuid4())
 
@@ -64,7 +75,6 @@ def build_linux(build_dir="build", features="", cpu_features="avx2"):
         "docker run "
         "--name {container_name} "
         "--env-file env.list "
-        "-it "
         "manylinux-builder".format(
             pwd=os.getcwd(), cpu_features=cpu_features, container_name=container_name
         )
@@ -106,10 +116,16 @@ def compress_binaries(archive_name, build_dir="build"):
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser.add_argument("cpu_features", type=str)
+
+    args = parser.parse_args()
+
     if platform.system() == "Linux":
-        for cpu_features in ("sse", "avx", "avx2"):
-            print("Building for {}...".format(cpu_features))
-            build_linux(features="openblas", cpu_features=cpu_features)
+        build_linux(features="openblas", cpu_features=args.cpu_features)
     else:
-        for cpu_features in ("sse", "avx"):
-            build_osx(features="openblas", cpu_features=cpu_features)
+        # There are a bunch of performance problems in OpenBLAS on OSX:
+        # https://github.com/xianyi/OpenBLAS/issues/533.
+        # Upgrade to v0.3.0 is blocked by https://github.com/xianyi/OpenBLAS/issues/1586.
+        # So we use accelerate on OSX.
+        build_osx(features="accelerate", cpu_features=args.cpu_features)
