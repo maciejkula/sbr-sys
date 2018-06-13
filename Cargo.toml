@@ -1,6 +1,6 @@
 [package]
 name = "sbr-sys"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["maciejkula <maciej.kula@gmail.com>"]
 description = "C bindings for sbr."
 repository = "https://github.com/maciejkula/sbr-sys"
