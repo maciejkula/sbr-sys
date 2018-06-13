@@ -25,6 +25,9 @@ def build_osx(build_dir="build", features="", cpu_features="avx2"):
     os.environ["BINARY"] = "64"
     os.environ["USE_OPENMP"] = "0"
 
+    # Allow multithreaded calls
+    os.environ["NO_AFFINITY"] = "1"
+
     cargo_cmd = ["cargo", "build", "--verbose", "--release", "--features={}".format(features)]
     subprocess.check_call(cargo_cmd)
 
@@ -63,6 +66,9 @@ def build_linux(build_dir="build", features="", cpu_features="avx2"):
         envfile.write("DYNAMIC_ARCH=1\n")
         envfile.write("BINARY=64\n")
         envfile.write("USE_OPENMP=0\n")
+
+        # Allow multithreaded calls
+        envfile.write("NO_AFFINITY=1\n")
 
     container_name = str(uuid.uuid4())
 
