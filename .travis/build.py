@@ -109,6 +109,9 @@ def build_linux(build_dir="build", features="", cpu_features="avx2"):
             ["docker", "cp", "{}:{}".format(container_name, container_fname), local_dest]
         )
 
+        # Strip the binary
+        subprocess.check_call(["strip", "-g", local_dest])
+
         with zipfile.ZipFile(local_dest + ".zip", "w") as archive:
             archive.write(local_dest, fname)
 

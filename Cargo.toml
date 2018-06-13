@@ -32,5 +32,4 @@ version = "0.2.1"
 default-features = false
 
 [profile.release]
-# Doesn't work with cgo on Darwin
-lto = false
+lto = true

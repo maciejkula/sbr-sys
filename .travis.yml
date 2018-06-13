@@ -36,5 +36,4 @@ deploy:
   overwrite: true
   on:
     repo: maciejkula/sbr-sys
-    tags: true
-    branch: master
+    branch: smaller_binaries
