@@ -32,4 +32,5 @@ version = "0.2.1"
 default-features = false
 
 [profile.release]
-lto = true
+# Segfaults on OSX when enabled.
+lto = false

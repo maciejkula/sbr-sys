@@ -49,6 +49,17 @@ def build_osx(build_dir="build", features="", cpu_features="avx2"):
 
 def build_linux(build_dir="build", features="", cpu_features="avx2"):
 
+    # Rewrite Cargo.toml to enable lto
+    with open("Cargo.toml", "r") as cargo_toml:
+        contents = cargo_toml.read()
+
+    with open("Cargo.toml", "w") as cargo_toml:
+        cargo_toml.write(contents.replace("lto = false", "lto = true"))
+
+    with open("Cargo.toml", "r") as cargo_toml:
+        print("Amended Cargo.toml:")
+        print(cargo_toml.read())
+
     with open("env.list", "w") as envfile:
         envfile.write(
             "RUSTFLAGS=-C target-feature=+{cpu_features}\n".format(cpu_features=cpu_features)
