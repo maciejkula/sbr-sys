@@ -10,11 +10,16 @@ extern crate sbr;
 
 mod ffi_results;
 
+#[macro_use]
+mod ffi_macros;
+
 use std::os::raw::{c_char, c_uchar};
 
 use sbr::OnlineRankingModel;
 
-use ffi_results::Opaque;
+pub trait Opaque<T> {
+    unsafe fn into_box(self) -> Box<T>;
+}
 
 /// Loss type.
 #[repr(C)]
@@ -104,29 +109,23 @@ impl LSTMHyperparameters {
     }
 }
 
-/// Build a new implicit LSTM model from hyperparameters.
-/// The caller owns the returned objects and should free
-/// it with [implicit_lstm_free].
-#[no_mangle]
-pub extern "C" fn implicit_lstm_new(
-    hyperparameters: LSTMHyperparameters,
-) -> ffi_results::ImplicitLSTMModelResult {
-    unsafe { hyperparameters.convert().map(|hyper| hyper.build()).into() }
-}
+impl_model!(
+    hyperparameters = LSTMHyperparameters,
+    model = sbr::models::lstm::ImplicitLSTMModel,
+    new_name = implicit_lstm_new,
+    free_name = implicit_lstm_free,
+    fit_name = implicit_lstm_fit,
+    predict_name = implicit_lstm_predict,
+    result_name = ImplicitLSTMModelResult,
+    opaque_name = ImplicitLSTMModelPointer,
+);
 
-macro_rules! free {
-    ($name:ident, $type:ty) => {
-        /// Free the data behind the input pointer.
-        #[no_mangle]
-        pub extern "C" fn $name(x: *mut $type) {
-            unsafe {
-                x.into_box();
-            }
-        }
-    };
-}
-
-free!(implicit_lstm_free, ffi_results::ImplicitLSTMModelPointer);
+ffi_result!(
+    InteractionsResult,
+    sbr::data::Interactions,
+    InteractionsPointer
+);
+ffi_result!(FloatResult, f32);
 
 /// Create an interaction dataset from input arrays.
 #[no_mangle]
@@ -137,7 +136,7 @@ pub extern "C" fn interactions_new(
     users: *const libc::size_t,
     items: *const libc::size_t,
     timestamps: *const libc::size_t,
-) -> ffi_results::InteractionsResult {
+) -> InteractionsResult {
     let (users, items, timestamps) = unsafe {
         (
             std::slice::from_raw_parts(users, len),
@@ -156,128 +155,3 @@ pub extern "C" fn interactions_new(
 }
 
 free!(interactions_free, ffi_results::InteractionsPointer);
-
-/// Fit an ImplicitLSTMModel.
-#[no_mangle]
-pub extern "C" fn implicit_lstm_fit(
-    model: *mut ffi_results::ImplicitLSTMModelPointer,
-    data: *const ffi_results::InteractionsPointer,
-) -> ffi_results::FloatResult {
-    let result = unsafe {
-        (*(model as *mut sbr::models::lstm::ImplicitLSTMModel))
-            .fit(&(*(data as *const sbr::data::Interactions)).to_compressed())
-    };
-
-    result
-        .map_err(|_| ffi_results::errors::FITTING_FAILED)
-        .into()
-}
-
-/// Get predictions out of an ImplicitLSTMModel.
-///
-/// The returned string is non-null if an error occurred.
-/// It must not be freed.
-#[no_mangle]
-pub extern "C" fn implicit_lstm_predict(
-    model: *mut ffi_results::ImplicitLSTMModelPointer,
-    user_history: *const libc::size_t,
-    history_len: libc::size_t,
-    item_ids: *const libc::size_t,
-    out: *mut f32,
-    predictions_len: libc::size_t,
-) -> *const c_char {
-    let (model, history, item_ids, out): (
-        &sbr::models::lstm::ImplicitLSTMModel,
-        &[libc::size_t],
-        &[libc::size_t],
-        &mut [f32],
-    ) = unsafe {
-        (
-            &(*(model as *mut sbr::models::lstm::ImplicitLSTMModel)),
-            std::slice::from_raw_parts(user_history, history_len as usize),
-            std::slice::from_raw_parts(item_ids, predictions_len as usize),
-            std::slice::from_raw_parts_mut(out, predictions_len as usize),
-        )
-    };
-
-    let user_repr = if let Ok(repr) = model.user_representation(&history) {
-        repr
-    } else {
-        return ffi_results::errors::BAD_REPRESENTATION.as_ptr();
-    };
-
-    if let Ok(predictions) = model.predict(&user_repr, &item_ids) {
-        for (&prediction, out_val) in predictions.iter().zip(out.iter_mut()) {
-            *out_val = prediction;
-        }
-
-        ::std::ptr::null::<c_char>()
-    } else {
-        ffi_results::errors::BAD_PREDICTION.as_ptr()
-    }
-}
-
-/// Get the size (in bytes) of the serialized model.
-#[no_mangle]
-pub extern "C" fn implicit_lstm_get_serialized_size(
-    model: *mut ffi_results::ImplicitLSTMModelPointer,
-) -> libc::size_t {
-    let model = unsafe { &(*(model as *mut sbr::models::lstm::ImplicitLSTMModel)) };
-    bincode::serialized_size(model).expect("Unable to get serialized size") as usize
-}
-
-/// Serialize the model to the provided pointer.
-///
-/// Returns an error message if there was an error.
-#[no_mangle]
-pub extern "C" fn implicit_lstm_serialize(
-    model: *mut ffi_results::ImplicitLSTMModelPointer,
-    out: *mut c_uchar,
-    len: libc::size_t,
-) -> *const c_char {
-    let model = unsafe { &(*(model as *mut sbr::models::lstm::ImplicitLSTMModel)) };
-    let out = unsafe { std::slice::from_raw_parts_mut(out, len) };
-
-    if len < bincode::serialized_size(model).expect("Unable to get serialized size") as usize {
-        return ffi_results::errors::SERIALIZATION_TOO_SMALL.as_ptr();
-    }
-
-    if let Ok(_) = bincode::serialize_into(out, model) {
-        ::std::ptr::null::<c_char>()
-    } else {
-        ffi_results::errors::BAD_SERIALIZATION.as_ptr()
-    }
-}
-
-/// Deserialize the LSTM model from a byte array.
-#[no_mangle]
-pub extern "C" fn implicit_lstm_deserialize(
-    data: *mut c_uchar,
-    len: libc::size_t,
-) -> ffi_results::ImplicitLSTMModelResult {
-    let data = unsafe { std::slice::from_raw_parts_mut(data, len) };
-
-    bincode::deserialize::<sbr::models::lstm::ImplicitLSTMModel>(data)
-        .map_err(|_| ffi_results::errors::BAD_DESERIALIZATION)
-        .into()
-}
-
-/// Compute MRR score for a fitted model.
-#[no_mangle]
-pub extern "C" fn implicit_lstm_mrr_score(
-    model: *const ffi_results::ImplicitLSTMModelPointer,
-    data: *const ffi_results::InteractionsPointer,
-) -> ffi_results::FloatResult {
-    let result = unsafe {
-        sbr::evaluation::mrr_score(
-            &(*(model as *const sbr::models::lstm::ImplicitLSTMModel)),
-            &(*(data as *const sbr::data::Interactions)).to_compressed(),
-        )
-    };
-
-    result
-        .map_err(|e| match e {
-            sbr::PredictionError::InvalidPredictionValue => ffi_results::errors::BAD_PREDICTION,
-        })
-        .into()
-}
