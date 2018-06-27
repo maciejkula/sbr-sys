@@ -68,7 +68,7 @@ def build_windows(build_dir="build", features="", cpu_features="avx2"):
     # Allow multithreaded calls
     os.environ["NO_AFFINITY"] = "1"
 
-    cargo_cmd = ["cargo", "build", --"target", os.environ["TARGET"],
+    cargo_cmd = ["cargo", "build", "--target", os.environ["TARGET"],
                  "--verbose", "--release", "--features={}".format(features)]
     subprocess.check_call(cargo_cmd)
 

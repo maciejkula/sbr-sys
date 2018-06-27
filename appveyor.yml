@@ -41,7 +41,7 @@ test_script:
 
 before_deploy:
   # TODO Update this to build the artifacts that matter to you
-  - .travis/build.py avx
+  - python .travis/build.py avx
   - ps: ci\before_deploy.ps1
 
 deploy:
@@ -59,19 +59,11 @@ deploy:
     # and nightly channels. This condition makes sure there is only one release
     # for such targets and that's generated using the stable channel
     RUST_VERSION: stable
-    appveyor_repo_tag: true
   provider: GitHub
 
 cache:
   - C:\Users\appveyor\.cargo\registry
   - target
-
-branches:
-  only:
-    # Release tags
-    - /^v\d+\.\d+\.\d+.*$/
-    - master
-    - appveyor
 
 notifications:
   - provider: Email
