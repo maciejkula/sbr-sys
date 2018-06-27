@@ -47,6 +47,32 @@ def build_osx(build_dir="build", features="", cpu_features="avx2"):
         os.unlink(dest_location)
 
 
+def build_windows(build_dir="build", features="", cpu_features="avx2"):
+
+    # Set rustflags
+    os.environ["RUSTFLAGS"] = "-C target-feature=+{}".format(cpu_features)
+
+    # Make OpenBLAS compilation use the right target architecture
+    os.environ["CFLAGS"] = "-m{}".format(cpu_features)
+    os.environ["CXXFLAGS"] = "-m{}".format(cpu_features)
+
+    # Make OpenBLAS support lots of threads.
+    os.environ["OPENBLAS_NUM_THREADS"] = "128"
+    os.environ["NUM_THREADS"] = "128"
+
+    # Make OpenBLAS detect architectures
+    os.environ["DYNAMIC_ARCH"] = "1"
+    os.environ["BINARY"] = "64"
+    os.environ["USE_OPENMP"] = "0"
+
+    # Allow multithreaded calls
+    os.environ["NO_AFFINITY"] = "1"
+
+    cargo_cmd = ["cargo", "build", --"target", os.environ["TARGET"],
+                 "--verbose", "--release", "--features={}".format(features)]
+    subprocess.check_call(cargo_cmd)
+
+
 def build_linux(build_dir="build", features="", cpu_features="avx2"):
 
     # Rewrite Cargo.toml to enable lto
@@ -143,6 +169,8 @@ if __name__ == "__main__":
 
     if platform.system() == "Linux":
         build_linux(features="openblas", cpu_features=args.cpu_features)
+    elif platform.system() == "Windows":
+        build_windows(features="openblas", cpu_features=args.cpu_features)
     else:
         # There are a bunch of performance problems in OpenBLAS on OSX:
         # https://github.com/xianyi/OpenBLAS/issues/533.
