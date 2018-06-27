@@ -10,7 +10,7 @@ Set-Location $STAGE
 
 $ZIP = "$SRC_DIR\$($Env:CRATE_NAME)-$($Env:APPVEYOR_REPO_TAG_NAME)-$($Env:TARGET).zip"
 
-# TODO Update this to package the right artifacts
+ls "$SRC_DIR\target\$($Env:TARGET)\release\"
 Copy-Item "$SRC_DIR\target\$($Env:TARGET)\release\libsbr_sys.dll" '.\'
 
 7z a "$ZIP" *
