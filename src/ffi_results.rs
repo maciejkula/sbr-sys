@@ -1,8 +1,3 @@
-use const_cstr;
-use sbr;
-
-use std::os::raw::c_char;
-
 /// Errors messages as static C strings.
 pub mod errors {
     const_cstr! {

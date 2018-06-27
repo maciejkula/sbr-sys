@@ -91,7 +91,11 @@ macro_rules! impl_model {
         $new_name:ident,free_name =
         $free_name:ident,fit_name =
         $fit_name:ident,predict_name =
-        $predict_name:ident,result_name =
+        $predict_name:ident,get_serialized_size_name =
+        $get_serialized_size_name:ident,serialize_name =
+        $serialize_name:ident,deserialize_name =
+        $deserialize_name:ident,mrr_score_name =
+        $mrr_score_name:ident,result_name =
         $result_name:ident,opaque_name =
         $opaque_name:ident,
     ) => {
@@ -99,11 +103,9 @@ macro_rules! impl_model {
 
         /// Build a new model from hyperparameters.
         /// The caller owns the returned objects and should free
-        /// it with the corresponding `free` function..
+        /// it with the corresponding `free` function.
         #[no_mangle]
-        pub extern "C" fn $new_name(
-            hyperparameters: $hyperparameters,
-        ) -> ffi_results::ImplicitLSTMModelResult {
+        pub extern "C" fn $new_name(hyperparameters: $hyperparameters) -> $result_name {
             unsafe { hyperparameters.convert().map(|hyper| hyper.build()).into() }
         }
 
@@ -111,7 +113,7 @@ macro_rules! impl_model {
         #[no_mangle]
         pub extern "C" fn $fit_name(
             model: *mut $opaque_name,
-            data: *const ffi_results::InteractionsPointer,
+            data: *const InteractionsPointer,
         ) -> FloatResult {
             let result = unsafe {
                 (*(model as *mut $model))
@@ -169,10 +171,8 @@ macro_rules! impl_model {
 
         /// Get the size (in bytes) of the serialized model.
         #[no_mangle]
-        pub extern "C" fn implicit_lstm_get_serialized_size(
-            model: *mut ffi_results::ImplicitLSTMModelPointer,
-        ) -> libc::size_t {
-            let model = unsafe { &(*(model as *mut sbr::models::lstm::ImplicitLSTMModel)) };
+        pub extern "C" fn $get_serialized_size_name(model: *mut $opaque_name) -> libc::size_t {
+            let model = unsafe { &(*(model as *mut $model)) };
             bincode::serialized_size(model).expect("Unable to get serialized size") as usize
         }
 
@@ -180,12 +180,12 @@ macro_rules! impl_model {
         ///
         /// Returns an error message if there was an error.
         #[no_mangle]
-        pub extern "C" fn implicit_lstm_serialize(
-            model: *mut ffi_results::ImplicitLSTMModelPointer,
+        pub extern "C" fn $serialize_name(
+            model: *mut $opaque_name,
             out: *mut c_uchar,
             len: libc::size_t,
         ) -> *const c_char {
-            let model = unsafe { &(*(model as *mut sbr::models::lstm::ImplicitLSTMModel)) };
+            let model = unsafe { &(*(model as *mut $model)) };
             let out = unsafe { std::slice::from_raw_parts_mut(out, len) };
 
             if len
@@ -201,28 +201,25 @@ macro_rules! impl_model {
             }
         }
 
-        /// Deserialize the LSTM model from a byte array.
+        /// Deserialize the model from a byte array.
         #[no_mangle]
-        pub extern "C" fn implicit_lstm_deserialize(
-            data: *mut c_uchar,
-            len: libc::size_t,
-        ) -> ffi_results::ImplicitLSTMModelResult {
+        pub extern "C" fn $deserialize_name(data: *mut c_uchar, len: libc::size_t) -> $result_name {
             let data = unsafe { std::slice::from_raw_parts_mut(data, len) };
 
-            bincode::deserialize::<sbr::models::lstm::ImplicitLSTMModel>(data)
+            bincode::deserialize::<$model>(data)
                 .map_err(|_| ffi_results::errors::BAD_DESERIALIZATION)
                 .into()
         }
 
         /// Compute MRR score for a fitted model.
         #[no_mangle]
-        pub extern "C" fn implicit_lstm_mrr_score(
-            model: *const ffi_results::ImplicitLSTMModelPointer,
-            data: *const ffi_results::InteractionsPointer,
-        ) -> ffi_results::FloatResult {
+        pub extern "C" fn $mrr_score_name(
+            model: *const $opaque_name,
+            data: *const InteractionsPointer,
+        ) -> FloatResult {
             let result = unsafe {
                 sbr::evaluation::mrr_score(
-                    &(*(model as *const sbr::models::lstm::ImplicitLSTMModel)),
+                    &(*(model as *const $model)),
                     &(*(data as *const sbr::data::Interactions)).to_compressed(),
                 )
             };
