@@ -11,7 +11,7 @@ Set-Location $STAGE
 $ZIP = "$SRC_DIR\$($Env:CRATE_NAME)-$($Env:APPVEYOR_REPO_TAG_NAME)-$($Env:TARGET).zip"
 
 ls "$SRC_DIR\target\$($Env:TARGET)\release\"
-Copy-Item "$SRC_DIR\target\$($Env:TARGET)\release\libsbr_sys.dll" '.\'
+Copy-Item "$SRC_DIR\target\$($Env:TARGET)\release\sbr_sys.dll" '.\'
 
 7z a "$ZIP" *
 
