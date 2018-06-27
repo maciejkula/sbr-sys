@@ -74,14 +74,14 @@ impl LSTMHyperparameters {
     /// Convert to the actual hyperparameters object.
     unsafe fn convert(&self) -> Result<sbr::models::lstm::Hyperparameters, const_cstr::ConstCStr> {
         let optimizer = match self.optimizer {
-            Optimizer::Adam => Ok(sbr::models::lstm::Optimizer::Adam),
-            Optimizer::Adagrad => Ok(sbr::models::lstm::Optimizer::Adagrad),
+            Optimizer::Adam => Ok(sbr::models::Optimizer::Adam),
+            Optimizer::Adagrad => Ok(sbr::models::Optimizer::Adagrad),
         }?;
 
         let loss = match self.loss {
-            Loss::BPR => Ok(sbr::models::lstm::Loss::BPR),
-            Loss::Hinge => Ok(sbr::models::lstm::Loss::Hinge),
-            Loss::WARP => Ok(sbr::models::lstm::Loss::WARP),
+            Loss::BPR => Ok(sbr::models::Loss::BPR),
+            Loss::Hinge => Ok(sbr::models::Loss::Hinge),
+            Loss::WARP => Ok(sbr::models::Loss::WARP),
         }?;
 
         Ok(
@@ -96,7 +96,7 @@ impl LSTMHyperparameters {
                 } else {
                     sbr::models::lstm::LSTMVariant::Normal
                 })
-                .parallelism(sbr::models::lstm::Parallelism::Synchronous)
+                .parallelism(sbr::models::Parallelism::Synchronous)
                 .optimizer(optimizer)
                 .loss(loss)
                 .from_seed(self.random_seed),
