@@ -170,7 +170,7 @@ if __name__ == "__main__":
     if platform.system() == "Linux":
         build_linux(features="openblas", cpu_features=args.cpu_features)
     elif platform.system() == "Windows":
-        build_windows(features="openblas", cpu_features=args.cpu_features)
+        build_windows(features="", cpu_features=args.cpu_features)
     else:
         # There are a bunch of performance problems in OpenBLAS on OSX:
         # https://github.com/xianyi/OpenBLAS/issues/533.
